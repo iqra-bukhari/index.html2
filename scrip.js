@@ -1,41 +1,51 @@
+const promptEl = document.getElementById("prompt");
+const ratioEl = document.getElementById("ratio");
+const soundEl = document.getElementById("sound");
+const button = document.getElementById("generate");
+const statusEl = document.getElementById("status");
+const result = document.getElementById("result");
+const video = document.getElementById("video");
+const download = document.getElementById("download");
 
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// آپ کی وہ بالکل تازہ اور ایکٹو چابی
-const API_KEY = "(Gemini API Key 4)"; 
-const genAI = new GoogleGenerativeAI(API_KEY);
-
-const model = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
-  systemInstruction: "aik asa AI bna k do jis sy videos bn jyn"
-});
-
-window.sendMessage = async function() {
-    const inputField = document.getElementById("user-input");
-    const chatContainer = document.getElementById("chat-container");
-    
-    if (!inputField || !chatContainer) return;
-
-    const text = inputField.value.trim();
-    if (!text) return;
-
-    // صارف کا میسج اسکرین پر دکھائیں
-    chatContainer.innerHTML += <div class="message user">${text}</div>;
-    inputField.value = "";
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    try {
-        // جیمنائی سرور کو میسج بھیجیں
-        const result = await model.generateContent(text);
-        const responseText = result.response.text();
-
-        // مارخور کا جواب اسکرین پر دکھائیں
-        chatContainer.innerHTML += <div class="message bot">${responseText}</div>;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    } catch (error) {
-        console.error(error);
-        chatContainer.innerHTML += <div class="message bot" style="color:red;">خرابی: جیمنائی سرور سے رابطہ نہیں ہو سکا۔ دوبارہ کوشش کریں۔</div>;
-    }
+function status(message) {
+  statusEl.textContent = message;
+  statusEl.classList.remove("hidden");
 }
+
+button.addEventListener("click", async () => {
+  const prompt = promptEl.value.trim();
+  if (!prompt) {
+    status("Please write a video prompt first.");
+    return;
+  }
+
+  button.disabled = true;
+  result.classList.add("hidden");
+  status("Starting video generation… This may take a few minutes.");
+
+  try {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt,
+        aspectRatio: ratioEl.value,
+        sound: soundEl.checked,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Generation failed.");
+
+    const src = data:${data.mimeType};base64,${data.videoBase64};
+    video.src = src;
+    download.href = src;
+    result.classList.remove("hidden");
+    status("Video generated successfully.");
+    result.scrollIntoView({ behavior: "smooth" });
+  } catch (err) {
+    status("Error: " + err.message);
+  } finally {
+    button.disabled = false;
+  }
+});
