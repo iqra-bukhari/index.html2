@@ -14,6 +14,7 @@ function status(message) {
 
 button.addEventListener("click", async () => {
   const prompt = promptEl.value.trim();
+
   if (!prompt) {
     status("Please write a video prompt first.");
     return;
@@ -26,23 +27,35 @@ button.addEventListener("click", async () => {
   try {
     const res = await fetch("/api/generate", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json"
+      },
       body: JSON.stringify({
-        prompt,
+        prompt: prompt,
         aspectRatio: ratioEl.value,
-        sound: soundEl.checked,
-      }),
+        sound: soundEl.checked
+      })
     });
 
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Generation failed.");
 
-    const src = data:${data.mimeType};base64,${data.videoBase64};
+    if (!res.ok) {
+      throw new Error(data.error || "Generation failed.");
+    }
+
+    // FIXED LINE
+   const src = data:${data.mimeType};base64,${data.videoBase64};
+
     video.src = src;
     download.href = src;
+
     result.classList.remove("hidden");
     status("Video generated successfully.");
-    result.scrollIntoView({ behavior: "smooth" });
+
+    result.scrollIntoView({
+      behavior: "smooth"
+    });
+
   } catch (err) {
     status("Error: " + err.message);
   } finally {
