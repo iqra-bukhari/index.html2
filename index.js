@@ -146,8 +146,7 @@ video {
   }
 }
 api/
-    generate.js
-
+    generate.js (Gemini API Key 4)
 package.json
     {
   "name": "ai-video-generator",
